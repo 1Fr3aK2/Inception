@@ -1,0 +1,60 @@
+services: #imagens
+    nginx:
+        container_name: nginx 
+        build: #procurar pelo dockerfile
+            context: ./requirements/nginx #pasta onde procura o dockerfile
+            dockerfile: Dockerfile #inutil, mas serve para se o dockerfile tivesse outro nome
+        image: nginx:inception #nome e tag da imagem
+        env_file: .env #nome do ficheiro com envs
+        ports: #portas onde host e container comunicam
+            - "443:443"
+        networks: #permite os containers comunicarem uns com os outros
+            - inception
+        volumes: #local onde guarda uma copia das informacoes
+            - wordpress:/var/www/html #path dentro do container
+        restart: on-failure #restart quando algum erro acontece
+
+    mariadb:
+        container_name: mariadb
+        build:
+            context: ./requirements/mariadb
+            dockerfile: Dockerfile
+        image: mariadb:inception
+        env_file: .env
+        networks:
+            - inception
+        volumes:
+            - db:/var/lib/mysql
+        restart: on-failure
+
+    wordpress:
+        container_name: wordpress
+        build:
+            context: ./requirements/wordpress
+            dockerfile: Dockerfile
+        image: wordpress:inception
+        env_files: .env
+        networks:
+            - inception
+        volumes:
+            - wordpress:/var/www/html
+        restart: on-failure
+
+networks: #definir a network
+    - inception:
+          driver: bridge #std network type para comunicacoes dentro de um host
+
+volumes: #local onde guarda as informacoes
+    db:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/db #path dentro do host
+    
+    wordpress:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: ./data/wordpress #path dentro do host
