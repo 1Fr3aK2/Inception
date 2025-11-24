@@ -1,60 +1,102 @@
-services: #imagens
-    nginx:
-        container_name: nginx 
-        build: #procurar pelo dockerfile
-            context: ./requirements/nginx #pasta onde procura o dockerfile
-            dockerfile: Dockerfile #inutil, mas serve para se o dockerfile tivesse outro nome
-        image: nginx:inception #nome e tag da imagem
-        env_file: .env #nome do ficheiro com envs
-        ports: #portas onde host e container comunicam
-            - "443:443"
-        networks: #permite os containers comunicarem uns com os outros
-            - inception
-        volumes: #local onde guarda uma copia das informacoes
-            - wordpress:/var/www/html #path dentro do container
-        restart: on-failure #restart quando algum erro acontece
+###############################
+# DOCKER COMPOSE - SERVIÇOS
+###############################
 
+services:  # Lista de containers que serão criados
+
+    ###############################
+    # SERVIÇO NGINX
+    ###############################
+    nginx:
+        container_name: nginx                 # Nome do container
+        build:                                # Como construir a imagem
+            context: ./requirements/nginx     # Diretório onde está o Dockerfile
+            dockerfile: Dockerfile            # Nome do Dockerfile (pode ser omitido se for "Dockerfile")
+        image: nginx:inception                # Nome e tag da imagem resultante
+        env_file: .env                        # Ficheiro com variáveis de ambiente
+        ports:                                # Portas expostas (HOST:CONTAINER)
+            - "443:443"                       # HTTPS exposto ao host
+        networks:                             # Redes a que o container pertence
+            - inception
+        volumes:                              # Volumes montados dentro do container
+            - wordpress:/var/www/html         # Diretório onde o Nginx lê os ficheiros do WordPress
+        restart: on-failure                   # Reinicia o container apenas se falhar
+    ###############################
+    # SERVIÇO MARIADB
+    ###############################
     mariadb:
         container_name: mariadb
         build:
             context: ./requirements/mariadb
             dockerfile: Dockerfile
         image: mariadb:inception
-        env_file: .env
+        env_file: .env                        # Variáveis como DB_NAME, DB_USER...
         networks:
             - inception
         volumes:
-            - db:/var/lib/mysql
+            - db:/var/lib/mysql               # Onde ficam as bases de dados
         restart: on-failure
 
+    ###############################
+    # SERVIÇO WORDPRESS (PHP-FPM)
+    ###############################
     wordpress:
         container_name: wordpress
         build:
             context: ./requirements/wordpress
             dockerfile: Dockerfile
         image: wordpress:inception
-        env_files: .env
+        env_file: .env                        # Variáveis como WP_ADMIN, WP_PASSWORD...
         networks:
             - inception
         volumes:
-            - wordpress:/var/www/html
+            - wordpress:/var/www/html         # Código e uploads do WordPress
         restart: on-failure
 
-networks: #definir a network
-    - inception:
-          driver: bridge #std network type para comunicacoes dentro de um host
+###############################
+# DEFINIÇÃO DA NETWORK
+###############################
+networks:
+    inception:
+        driver: bridge                        # Rede local para comunicação interna entre containers
 
-volumes: #local onde guarda as informacoes
+###############################
+# DEFINIÇÃO DOS VOLUMES
+###############################
+
+###############################
+# EXPLICAÇÃO SOBRE VOLUMES
+###############################
+# Volumes são locais onde os dados ficam guardados de forma permanente,
+# mesmo que os containers sejam destruídos ou recriados.
+# 
+# Como os containers são temporários, tudo o que estiver dentro deles desaparece ao serem apagados.
+# Por isso os volumes são ESSENCIAIS para guardar:
+#   - Bases de dados (MariaDB)
+#   - Ficheiros do WordPress (uploads, plugins, temas)
+#   - Qualquer dado que não deve ser perdido após restart/rebuild
+#
+# Neste projeto, usamos “bind mounts”: pastas reais no host ligadas ao container.
+# Assim consegues ver e gerir os ficheiros diretamente em ./data/*
+###############################
+volumes:
+
+    ###############################
+    # VOLUME DA BASE DE DADOS
+    ###############################
     db:
         driver: local
         driver_opts:
-            type: none
-            o: bind
-            device: ./data/db #path dentro do host
-    
+            type: none                        # Indica ao Docker que é um bind mount
+            o: bind                           # 'bind' = apontar para uma pasta real do host
+            device: ./data/db                 # Diretório no host onde ficam os ficheiros da BD
+
+    ###############################
+    # VOLUME DO WORDPRESS
+    ###############################
     wordpress:
         driver: local
         driver_opts:
             type: none
             o: bind
-            device: ./data/wordpress #path dentro do host
+            device: ./data/wordpress          # Diretório no host onde ficam ficheiros da instalação WP
