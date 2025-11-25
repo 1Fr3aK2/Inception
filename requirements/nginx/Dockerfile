@@ -12,7 +12,7 @@ RUN mkdir -p /etc/nginx/ssl /var/www/html;
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Gera um certificado SSL autoassinado
-RUN openssl req -x509 -nodes -days 365 \
+RUN openssl req -x509 -nodes -days 365 \	
     -subj "/C=PT/ST=Lisbon/L=Lisbon/O=42/Inception/CN=raamorim.42.fr" \
     -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/nginx.key \
