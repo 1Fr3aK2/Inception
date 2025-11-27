@@ -16,7 +16,7 @@ RUN openssl req -x509 -nodes -days 365 \
     -subj "/C=PT/ST=Lisbon/L=Lisbon/O=42/Inception/CN=raamorim.42.fr" \
     -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/nginx.key \
-    -out /etc/nginx/ssl/nginx.cert                       
+    -out /etc/nginx/ssl/nginx.cert  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/* 
 
 # Cria um certificado X.509 válido por 365 dias
 # Define informações do certificado
