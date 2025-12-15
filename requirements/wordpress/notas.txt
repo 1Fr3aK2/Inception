@@ -1,0 +1,19 @@
+4️⃣ Pontos importantes para a defesa (⚠️ muito cobrados)
+
+Se o avaliador perguntar:
+
+❓ Porque usas um script no ENTRYPOINT?
+
+Para garantir que o WordPress é configurado automaticamente e apenas uma vez, sem interação manual, como exigido no subject.
+
+❓ Porque o php-fpm está em foreground?
+
+Porque um container deve ter apenas um processo principal, e ele não pode terminar.
+
+❓ Porque não usas imagem oficial do WordPress?
+
+O subject proíbe imagens prontas e exige que tudo seja construído manualmente.
+
+❓ Porque verificas se o wp-config.php existe?
+
+Para tornar o container idempotente e evitar reinstalações ao reiniciar.

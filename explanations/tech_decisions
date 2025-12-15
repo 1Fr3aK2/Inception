@@ -1,0 +1,16 @@
+⚙️ Decisões técnicas (para já fica registado)
+Item	Decisão
+Base image	Debian penúltima estável (debian:bookworm → quando trixie for estável, bookworm é a penúltima)
+Orquestração	docker compose
+Web	NGINX com TLSv1.2 / TLSv1.3
+App	WordPress + php-fpm (sem nginx)
+DB	MariaDB (sem nginx)
+Network	bridge custom (obrigatório)
+Volumes	2 volumes persistentes em /home/raamorim/data
+Secrets	.env + possibilidade de secrets (explicável na defesa)
+Domínio	raamorim.42.fr
+
+
+🧠 Frase de defesa importante
+
+“Uso uma network bridge dedicada porque o subject proíbe host e --link, e quero isolamento e resolução de nomes por serviço.”

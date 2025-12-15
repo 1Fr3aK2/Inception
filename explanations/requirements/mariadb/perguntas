@@ -1,0 +1,16 @@
+🧠 Perguntas típicas de defesa (MariaDB)
+❓ Porque não usas systemctl?
+
+“Porque containers não usam systemd. Um container deve ter um único processo principal.”
+
+❓ O que é o PID 1?
+
+“É o processo principal do container. Se ele morrer, o container morre. Por isso usamos exec mysqld_safe.”
+
+❓ Onde ficam os dados da base de dados?
+
+“Em /var/lib/mysql, mapeado para /home/raamorim/data/mariadb no host.”
+
+❓ Porque usas variáveis de ambiente?
+
+“É obrigatório pelo subject e evita hardcoding de credenciais.”

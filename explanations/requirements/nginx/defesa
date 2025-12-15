@@ -1,0 +1,28 @@
+🧠 O que o NGINX faz neste projeto?
+
+Único ponto de entrada (443)
+
+Termina TLS
+
+Encaminha pedidos PHP para o PHP-FPM
+
+Serve ficheiros estáticos do WordPress
+
+
+
+🧠 Perguntas CLÁSSICAS de defesa (NGINX)
+❓ Porque só a porta 443 está aberta?
+
+“Porque o subject exige que o NGINX seja o único entrypoint e apenas por HTTPS.”
+
+❓ Onde é feito o TLS?
+
+“No NGINX. Os outros containers comunicam apenas na rede interna.”
+
+❓ Porque usas certificado autoassinado?
+
+“É suficiente para ambiente local. Em produção usaríamos Let’s Encrypt.”
+
+❓ Como o NGINX fala com o PHP?
+
+“Via FastCGI para wordpress:9000, resolvido pela network Docker.”

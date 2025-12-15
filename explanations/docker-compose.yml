@@ -1,0 +1,130 @@
+version: "3.8"
+# Versão do docker-compose.
+# 3.8 é estável e compatível com Docker moderno.
+# NÃO usar versões antigas nem features deprecated.
+
+services:
+
+  mariadb:
+    # Nome do container visível com "docker ps"
+    container_name: mariadb
+
+    build:
+      # Contexto onde está o Dockerfile do MariaDB
+      context: ./requirements/mariadb
+
+    # Nome da imagem gerada localmente
+    # Deve ter o mesmo nome do serviço (regra do subject)
+    image: mariadb
+
+    # Política de restart:
+    # - garante que o container reinicia se crashar
+    # - NÃO cria loops infinitos artificiais
+    restart: unless-stopped
+
+    # Ficheiro .env com variáveis de ambiente
+    # Passwords NÃO ficam no docker-compose
+    env_file:
+      - .env
+
+    volumes:
+      # Volume persistente para os dados da base de dados
+      # Isto garante que os dados sobrevivem a docker-compose down
+      - mariadb_data:/var/lib/mysql
+
+    networks:
+      # Network dedicada do projeto
+      # Permite comunicação interna por nome do serviço
+      - inception
+
+  wordpress:
+    container_name: wordpress
+
+    build:
+      context: ./requirements/wordpress
+
+    image: wordpress
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    # Garante que o MariaDB é iniciado antes
+    depends_on:
+      - mariadb
+
+    volumes:
+      # Volume onde ficam os ficheiros do WordPress
+      # wp-content, uploads, plugins, etc
+      - wordpress_data:/var/www/html
+
+    networks:
+      - inception
+
+  nginx:
+    container_name: nginx
+
+    build:
+      context: ./requirements/nginx
+
+    image: nginx
+
+    restart: unless-stopped
+
+    # NGINX depende do WordPress para servir o site
+    depends_on:
+      - wordpress
+
+    ports:
+      # ÚNICO ponto de entrada externo
+      # Porta 443 (HTTPS) → exigido pelo subject
+      - "443:443"
+
+    volumes:
+      # NGINX precisa de acesso aos ficheiros do WordPress
+      # Apenas leitura (pode ser read-only se quiseres justificar)
+      - wordpress_data:/var/www/html
+
+    networks:
+      - inception
+
+# Definição dos volumes persistentes
+volumes:
+
+  mariadb_data:
+    driver: local
+    driver_opts:
+      # Bind mount para uma pasta fixa no host
+      # Exigido pelo subject: /home/login/data
+      type: none
+      o: bind
+      device: /home/raamorim/data/mariadb
+
+  wordpress_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/raamorim/data/wordpress
+
+# Network personalizada do projeto
+networks:
+  inception:
+    driver: bridge
+    # bridge = isolamento + DNS interno automático
+
+
+🧠 Frases-chave para defesa (docker-compose)
+
+👉 Por que usas uma network bridge?
+
+“Porque o subject proíbe network: host e --link. A bridge permite isolamento e resolução DNS automática entre containers.”
+
+👉 Porque usas volumes bind em vez de volumes anónimos?
+
+“Para cumprir o requisito de persistência em /home/raamorim/data e facilitar debugging e backup.”
+
+👉 Porque não expões a porta do MariaDB?
+
+“Porque só o WordPress precisa de acesso à base de dados. A comunicação é interna pela network Docker.”

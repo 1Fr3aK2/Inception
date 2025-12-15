@@ -1,0 +1,21 @@
+🐘 WordPress + PHP-FPM — Visão Geral (para defesa)
+
+📌 O que este container faz?
+
+Corre PHP-FPM (FastCGI Process Manager)
+
+Contém o WordPress
+
+Comunica com:
+
+MariaDB (porta 3306, via network Docker)
+
+NGINX (FastCGI via socket TCP)
+
+📌 O que NÃO faz?
+
+❌ Não tem nginx
+
+❌ Não expõe portas para o host
+
+❌ Não serve HTTP diretamente

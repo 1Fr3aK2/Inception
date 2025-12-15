@@ -1,0 +1,8 @@
+🧠 Perguntas de defesa (Makefile)
+❓ Porque usas Makefile?
+
+“Porque o subject exige e porque simplifica a gestão do projeto com comandos padronizados.”
+
+❓ O que faz make re?
+
+“Apaga tudo (containers, volumes, imagens) e reconstrói a infraestrutura do zero.”

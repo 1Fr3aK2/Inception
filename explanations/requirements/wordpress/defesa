@@ -1,0 +1,16 @@
+🧠 Perguntas típicas de defesa (WordPress)
+❓ Porque usas PHP-FPM?
+
+“Porque o WordPress é PHP e o NGINX comunica via FastCGI, separando responsabilidades.”
+
+❓ Porque o WordPress não expõe portas?
+
+“Porque apenas o NGINX deve ser ponto de entrada externo.”
+
+❓ Como o WordPress fala com a base de dados?
+
+“Via hostname mariadb, resolvido pelo DNS interno da network Docker.”
+
+❓ Onde ficam os ficheiros do WordPress?
+
+“Em /var/www/html, mapeado para /home/raamorim/data/wordpress.”
