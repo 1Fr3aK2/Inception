@@ -1,122 +1,116 @@
-_This project has been created as part of the 42 curriculum by raamorim._
+# Inception
 
-Description:
+> 42 Lisboa — Systems Administration with Docker
 
-    This project aims to introduce systems administration concepts using Docker and Docker Compose.
+Deployed a hardened multi-service infrastructure (NGINX + WordPress + MariaDB) using Docker Compose with no pre-built images, enforcing network security by configuring TLS 1.2/1.3 termination on NGINX, isolating inter-service communication via a dedicated bridge network, and applying principle of least privilege per container — with documented awareness of the security tradeoff between Docker secrets and environment variables.
 
-    In this project, we build a small infrastructure composed by some isolated services, each running his own container.
+---
 
-    The infrastructure includes:
+## Architecture
 
-        - NGINX container configured with HTTPS(TLSv1.2/TLSv1.3);
-        - WordPress container running with PHP-FPM;
-        - MariaDB container for database;
-        - Docker volumes for data persistence;
-        - A Docker network dedicated for internal comunication between services;
+```
+                        HTTPS (TLSv1.2/1.3)
+Client ──────────────────────► NGINX (Reverse Proxy)
+                                      │
+                          Docker Bridge Network
+                         ┌────────────┴────────────┐
+                         ▼                         ▼
+                    WordPress (PHP-FPM)        MariaDB
+                         │                         │
+                    Volume (wp-data)         Volume (db-data)
+```
 
-    Definition of Services:
+| Service   | Role                                      |
+|-----------|-------------------------------------------|
+| NGINX     | Reverse proxy with TLS termination        |
+| WordPress | CMS with PHP-FPM, communicates with DB    |
+| MariaDB   | Database backend, no external exposure    |
 
-        - NGINX - Server that receives browser requests and sends them to wordpress.
-        - MariaDB - Database management system where WordPress data is stored.
-        - Wordpress - Content management system that uses database to store content.It's the application that creates the site.
+---
 
-    Main concepts:
+## Security Considerations
 
-        - Docker:
-            Containerization platform that allows packing aplications and dependencies (libraries, configs, etc), inside isolated container. With Docker applications run consistently across different enviroments, ensuring portability, scalability and reproducibility regardless of the host system.
-        - Container:
-            Isolated and lightweight unit that executes an application along with all its dependencies, sharing the host OS kernel. Containers start quickly, use fewer resources than virtual machines, and ensure the application runs consistently across different environments.
-        - Docker Compose:
-            It's a tool that allows to define and manage multi-containers applications using a "docker-compose.yml" file. This file specifies defines all servicies and how they're connected to each other.
-        - Docker Image:
-            It's an imutable template that contains instructions to build a container, including code, libraries, dependencies and configs. It's the blueprint used to create containers. Each service has is own image.
-        - Dockerfile:
-            It's an file containing sequencial instructions to build a docker image. It's like a "receipt" used to build an image.
-        - Volume:
-            Persistence data mecanism that stores data outside of the container's file system. Ex: If the container is removed, data isn't lost because it's stored outside of the container filesystem.
-        - Network (Docker):
-            Mecanism that allows isolated communication between containers. Private network where containers comunicate with each other.
-        - TLS (Transport Layer Security):
-            A cryptographic protocol that provides secure and encrypted communication between server and client. It's what turns HTTP into HTTPS.
-        - Reverse-Proxy:
-            Intermediare service that receives client requests and send them to one or more backend servers. Ex: User talks with NGINX and NGINX talks with Wordpress.
+**TLS 1.2/1.3 only** — older protocols disabled on NGINX, all traffic encrypted end-to-end.
 
-Instructions:
+**Network isolation** — services communicate over a dedicated Docker bridge network. No service is directly exposed except NGINX on port 443.
 
-    - make :
-        Build container and starts them.
-    - make prep:
-        Creates /home/raamorim/data/mariadb and /home/raamorim/data/wordpress
-        Changes the permissions allowing Docker services to access and write data.
-    - make build:
-        - Uses 'prep'
-        - Builds the Docker images for each service.
-    - make up:
-        Starts all docker services.
-    - make down:
-        Stop the infrastructure and removes the containers and networks created by Docker compose.
-    - make clean:
-        - Stops Docker services;
-        - Cleans stopped containers, dangling images, unsed networks and build cache.Also removes ./src/data, wich contains persistent data such as database or Wordpress files.
-    - make fclean:
-        - Stops and removes all containers on the host.
-        - Removes all images, volumes, and networks
-        - Removes ./src/data completely.
-    - make logs:
-        - Shows the logs of a specific service.
-    - make exec:
-        - Enters a running container for interactive use.
-    - make re:
-        -Restarts the infrastructure.
-        - Uses 'clean'
-        - Uses 'build'
-        - Uses 'up'.
+**Principle of least privilege** — each container runs only its required service, built from a custom Dockerfile with no pre-built or official images.
 
-    After the execution, website will be available at:
-        - https://raamorim.42.fr
+**Credentials management** — environment variables via `.env` file. In production, Docker secrets would be preferred to avoid credential exposure in logs.
 
+**No bind mounts** — Docker volumes used for data persistence, keeping host filesystem isolated from container data.
 
-Project description:
+---
 
-    - Virtual Machines vs Docker:
-        - VM - Each VM includes a full OS and virtual hardware. They're heavy and take longer to start.
-        - Docker - Share the host OS kernel, start in seconds, use fewer resources and are more portable.
+## Design Decisions
 
-    - Design Choice:
-		- Docker was chosen because it is lighter, faster, and more efficient than virtual machines, while still providing strong isolation between services.
-	- VM was used to be done in a closed environment.
- 
-    - Secrets vs Environment Variables:
-        - Secrets - Secure, only accessible inside the container, invisible in logs.
-        - Environment Variables - Easy to use, but visible in logs.
+**Docker over VM** — containers share the host OS kernel, start in seconds, and are more portable while still providing strong service isolation.
 
-    - Design Choice:
-	- This project uses environment variables via a .env file for simplicity.
-	- In production, Docker secrets are recommended for sensitive values like passwords or API keys.
+**Bridge network over host network** — containers communicate in an isolated virtual network rather than sharing host ports directly, reducing the attack surface.
 
-    - Docker Network vs Host Network:
-        - Docker Network - Containers comunicate in isolated virtual network.
-        - Host Network - Shares host ports, faster but less secure.
-	
-    - Design Choice:
-	- A Docker bridge network is used to isolate services while allowing controlled communication between them.
+**Volumes over bind mounts** — Docker-managed volumes are safer for persistent data and independent of the host filesystem structure.
 
-    - Docker Volumes vs Bind Mounts
-        - Volumes - Managed by Docker, safe for persistent data.
-        - Bind Mounts - Maps host folder, good for development, depenends on host.
+---
 
-    - Design Choice:
-	- Subject doesn't allow bind mounts.
+## Usage
 
+```bash
+# Build images and start all services
+make
 
-Resources:
+# Start services (after build)
+make up
 
-    AI - Used to clarify theoretical concepts and review best practices.
-    https://tuto.grademe.fr/inception/ - Provides a good guide to this project. Has clear explanations especially helpful for those starting the project.
-    Youtube- Used to search what was Docker and how to use it.
-    MariaDB Documentation - Used to learn how MariaDB works. 
-    NGINX documentation - Used to learn how NGINX works.
-    Docker documentation - Used to learn how Docker works.
+# Stop and remove containers and networks
+make down
 
+# Full clean (containers, images, volumes, networks, data)
+make fclean
 
+# Restart infrastructure
+make re
 
+# View logs for a specific service
+make logs
+
+# Enter a running container
+make exec
+```
+
+> After startup, the site is available at `https://raamorim.42.fr`
+
+---
+
+## Project Structure
+
+```
+Inception/
+├── src/
+│   ├── requirements/
+│   │   ├── nginx/
+│   │   │   └── Dockerfile
+│   │   ├── wordpress/
+│   │   │   └── Dockerfile
+│   │   └── mariadb/
+│   │       └── Dockerfile
+│   └── docker-compose.yml
+└── Makefile
+```
+
+---
+
+## Key Concepts
+
+**Docker** — containerization platform that packages applications and their dependencies into isolated, reproducible environments.
+
+**Docker Compose** — defines and manages multi-container applications via a single `docker-compose.yml` file.
+
+**Reverse Proxy** — NGINX sits between the client and backend services, handling TLS termination and routing requests to WordPress.
+
+**TLS (Transport Layer Security)** — cryptographic protocol that encrypts communication between client and server, turning HTTP into HTTPS.
+
+**Docker Volumes** — persist data outside the container filesystem, surviving container restarts and removals.
+
+---
+
+*42 Lisboa — raamorim*
